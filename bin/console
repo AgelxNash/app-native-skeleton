@@ -1,0 +1,24 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+$container = require dirname(__DIR__) . DIRECTORY_SEPARATOR . 'boostrap.php';
+$app = new Kernel($container);
+
+/**
+ * Получаем аргументы вызова и приводим их в ассоциативный массив, если это возможно
+ */
+$params = array_slice($argv, 2);
+array_map(static function($key, $val) use (&$params) {
+    if (preg_match('/\-\-(?<newKey>\w+)=(?<newVal>\w+)$/', $val, $tmp)) {
+        $params[$tmp['newKey']] = $tmp['newVal'];
+        unset($params[$key]);
+    }
+}, array_keys($params), $params);
+
+$app->run(
+    $argv[1] ?? '',
+    $params,
+    $container->get(Config::ACTION_DEFAULT_CLI->name)
+);
